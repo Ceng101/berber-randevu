@@ -335,56 +335,43 @@ async function loadDayData(date){
   blockedSlots = blockRes.data || [];
 }
 
+function canFitAppointment(startIdx, slotsNeeded){
+
+  for(let i = 0; i < slotsNeeded; i++){
+    const t = HOURS[startIdx + i];
+    if(!t) return false;
+
+    const blocked = blockedSlots.some(b => b.blocked_time.slice(0,5) === t);
+    const full = appointments.some(a => a.appointment_time.slice(0,5) === t);
+
+    if(blocked || full) return false;
+  }
+
+  return true;
+}
+
 function getSlotState(time){
 
-  // Manuel kapatılmış slot
-  if(blockedSlots.find(b => b.blocked_time.slice(0,5) === time)){
+  // manuel kapalı
+  if(blockedSlots.some(b => b.blocked_time.slice(0,5) === time)){
     return 'closed';
   }
 
-  // Bu slotta aktif randevu var mı?
-  const existingAppointment = appointments.find(
-    a => a.appointment_time.slice(0,5) === time
-  );
-
-  if(existingAppointment){
+  // zaten randevu başlangıcı mı?
+  if(appointments.some(a => a.appointment_time.slice(0,5) === time)){
     return 'full';
   }
 
-  // Yeni randevu buraya sığıyor mu kontrol et
+  const startIdx = HOURS.indexOf(time);
+  if(startIdx === -1) return 'closed';
+
   const duration = SERVICES[selectedService].duration;
   const slotsNeeded = Math.ceil(duration / 15);
 
-  const startIdx = HOURS.indexOf(time);
+  // SADECE “başlangıç olabilir mi?” kontrolü
+  const ok = canFitAppointment(startIdx, slotsNeeded);
 
-  if(startIdx === -1){
-    return 'closed';
-  }
-
-  for(let i = 0; i < slotsNeeded; i++){
-
-    const checkTime = HOURS[startIdx + i];
-
-    // Gün sonunu taşarsa kapat
-    if(!checkTime){
-      return 'closed';
-    }
-
-    // İleri slotlarda doluluk kontrolü
-    const hasBlocked = blockedSlots.find(
-      b => b.blocked_time.slice(0,5) === checkTime
-    );
-
-    const hasAppointment = appointments.find(
-      a => a.appointment_time.slice(0,5) === checkTime
-    );
-
-    if(hasBlocked || hasAppointment){
-      return 'closed';
-    }
-  }
-
-  return 'empty';
+  return ok ? 'empty' : 'closed';
 }
 
 // ── CUSTOMER ──────────────────────────────────────────────────
@@ -450,7 +437,7 @@ async function bookAppointment(){
       customer_phone: phone,
       appointment_date: selectedDate,
       appointment_time: HOURS[startIdx+i],
-      service: i===0 ? selectedService : selectedService+'_cont',
+      service: selectedService,
       duration_minutes: svc.duration,
     });
   }
