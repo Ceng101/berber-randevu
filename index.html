@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Berber Aygün Koç</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --card: #1c1c1c;
+      --border: #2a2a2a;
+      --gold: #c9a84c;
+      --gold-light: #e2c06e;
+      --gold-dim: rgba(201,168,76,0.15);
+      --text: #f0ece4;
+      --muted: #7a7570;
+      --danger: #c0392b;
+      --success: #27ae60;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .nav-brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      color: var(--gold);
+      letter-spacing: 0.03em;
+    }
+    .nav-brand-sub {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .nav-scissor {
+      font-size: 1.1rem;
+      margin-right: 6px;
+    }
+    .nav-admin-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-admin-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* SECTIONS */
+    #booking-section, #admin-login-section, #admin-panel-section {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    /* HEADER */
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+    .gold-line {
+      width: 48px;
+      height: 2px;
+      background: var(--gold);
+      margin: 12px auto 0;
+    }
+
+    /* STEP LABEL */
+    .step-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    /* SERVICE CARDS */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .service-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .service-card:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .service-card.selected { border-color: var(--gold); background: var(--gold-dim); }
+    .service-card .icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .service-card .name { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+    .service-card .dur { font-size: 0.75rem; color: var(--muted); }
+
+    /* DATE PICKER */
+    .date-section { margin-bottom: 32px; }
+    .date-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .date-input:focus { outline: none; border-color: var(--gold); }
+
+    /* LEGEND */
+    .legend {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .legend-dot.free { background: var(--gold); }
+    .legend-dot.busy { background: var(--border); }
+    .legend-dot.closed { background: #3a2a2a; border: 1px solid var(--danger); }
+
+    /* SLOT GRID */
+    .slot-section { margin-bottom: 32px; }
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .slot {
+      padding: 10px 6px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s;
+    }
+    .slot.free {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+    .slot.free:hover { background: var(--gold); color: #0d0d0d; }
+    .slot.free.selected { background: var(--gold); color: #0d0d0d; font-weight: 700; }
+    .slot.busy {
+      background: var(--card);
+      border-color: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+    .slot.blocked {
+      background: rgba(192,57,43,0.08);
+      border-color: rgba(192,57,43,0.3);
+      color: var(--danger);
+      cursor: not-allowed;
+      font-size: 0.72rem;
+    }
+    .slot.closed-admin {
+      background: #1a1010;
+      border-color: rgba(192,57,43,0.4);
+      color: var(--muted);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .slots-loading {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* FORM */
+    .booking-form { margin-bottom: 0; }
+    .form-group { margin-bottom: 16px; }
+    .form-group input {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input::placeholder { color: var(--muted); }
+    .form-group input:focus { outline: none; border-color: var(--gold); }
+
+    .confirm-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .confirm-btn:hover { background: var(--gold-light); }
+    .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* SUCCESS */
+    .success-banner {
+      background: rgba(39,174,96,0.12);
+      border: 1px solid rgba(39,174,96,0.35);
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: #2ecc71;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      display: none;
+    }
+    .success-banner.show { display: block; }
+
+    /* ADMIN LOGIN */
+    .admin-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px 32px;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+    .admin-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+    }
+    .admin-card .sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; }
+    .admin-error {
+      color: var(--danger);
+      font-size: 0.82rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .admin-error.show { display: block; }
+
+    /* ADMIN PANEL */
+    .admin-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .admin-top h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 16px;
+      border-radius: 4px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .stat-card .val { font-size: 1.8rem; font-weight: 700; color: var(--gold); font-family: 'Playfair Display', serif; }
+    .stat-card .lbl { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-slot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+    .admin-slot {
+      padding: 10px 6px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s;
+    }
+    .admin-slot.free { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+    .admin-slot.free:hover { background: rgba(192,57,43,0.15); border-color: var(--danger); color: var(--danger); }
+    .admin-slot.booked { background: rgba(39,174,96,0.1); border-color: rgba(39,174,96,0.3); color: #2ecc71; cursor: default; font-size: 0.7rem; }
+    .admin-slot.closed-slot { background: #1a1010; border-color: rgba(192,57,43,0.4); color: var(--danger); }
+    .admin-slot.closed-slot:hover { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+
+    .appts-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .appts-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .appts-table td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .appts-table tr:last-child td { border-bottom: none; }
+    .delete-btn {
+      background: none;
+      border: 1px solid rgba(192,57,43,0.4);
+      color: var(--danger);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .delete-btn:hover { background: rgba(192,57,43,0.15); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      .service-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .slot-grid, .admin-slot-grid { grid-template-columns: repeat(4, 1fr); }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .service-card { padding: 14px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-scissor">✂</span>
+    <div>
+      <div class="nav-brand-name">Berber Aygün Koç</div>
+      <div class="nav-brand-sub">Klasik Randevu Sistemi</div>
+    </div>
+  </div>
+  <button class="nav-admin-btn" onclick="showAdminLogin()">Admin</button>
+</nav>
+
+<!-- BOOKING SECTION -->
+<div id="booking-section">
+  <div class="page-header">
+    <h1>Randevu Al</h1>
+    <div class="gold-line"></div>
+    <p style="margin-top:14px">Hizmet seçin, uygun gün ve saati belirleyin — randevunuz hazır!</p>
+  </div>
+
+  <!-- SERVICE -->
+  <div class="step-label">1 — Hizmet Seçin</div>
+  <div class="service-grid">
+    <div class="service-card" onclick="selectService('sac', 45, this)">
+      <div class="icon">💈</div>
+      <div class="name">Saç</div>
+      <div class="dur">45 dakika</div>
+    </div>
+    <div class="service-card" onclick="selectService('sakal', 15, this)">
+      <div class="icon">🪒</div>
+      <div class="name">Sakal</div>
+      <div class="dur">15 dakika</div>
+    </div>
+    <div class="service-card" onclick="selectService('sac_sakal', 60, this)">
+      <div class="icon">✂️</div>
+      <div class="name">Saç + Sakal</div>
+      <div class="dur">60 dakika</div>
+    </div>
+  </div>
+
+  <!-- DATE -->
+  <div class="date-section">
+    <div class="step-label">2 — Gün Seçin</div>
+    <input type="date" class="date-input" id="date-input" onchange="loadSlots()" />
+  </div>
+
+  <!-- SLOTS -->
+  <div class="slot-section">
+    <div class="step-label">3 — Saat Seçin</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot free"></div> Boş</div>
+      <div class="legend-item"><div class="legend-dot busy"></div> Dolu</div>
+      <div class="legend-item"><div class="legend-dot closed"></div> Kapalı</div>
+    </div>
+    <div id="slot-container">
+      <div class="slots-loading">Önce hizmet ve gün seçin</div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="step-label">4 — Bilgileriniz</div>
+  <div class="booking-form">
+    <div class="form-group">
+      <input type="text" id="name-input" placeholder="Adınız Soyadınız" />
+    </div>
+    <div class="form-group">
+      <input type="tel" id="phone-input" placeholder="Telefon Numaranız" />
+    </div>
+    <button class="confirm-btn" onclick="confirmBooking()">✓ Randevumu Onayla</button>
+  </div>
+  <div class="success-banner" id="success-banner">
+    🎉 <strong>Randevunuz alındı!</strong> Randevu detaylarınız kaydedildi. Herhangi bir değişiklik için berberinizi arayabilirsiniz.
+  </div>
+</div>
+
+<!-- ADMIN LOGIN SECTION -->
+<div id="admin-login-section" class="hidden">
+  <div class="page-header">
+    <h1>Admin Girişi</h1>
+    <div class="gold-line"></div>
+  </div>
+  <div class="admin-card">
+    <h2>Yönetim Paneli</h2>
+    <p class="sub">Sadece berber erişebilir</p>
+    <div class="form-group">
+      <input type="text" id="admin-user" placeholder="Kullanıcı Adı" />
+    </div>
+    <div class="form-group">
+      <input type="password" id="admin-pass" placeholder="Şifre" onkeydown="if(event.key==='Enter')adminLogin()" />
+    </div>
+    <button class="confirm-btn" onclick="adminLogin()">Giriş Yap</button>
+    <div class="admin-error" id="admin-error">Kullanıcı adı veya şifre hatalı.</div>
+    <div style="margin-top:16px;text-align:center">
+      <button style="background:none;border:none;color:var(--muted);font-size:0.82rem;cursor:pointer" onclick="showBooking()">← Geri dön</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL SECTION -->
+<div id="admin-panel-section" class="hidden">
+  <div class="admin-top">
+    <h2>Yönetim Paneli</h2>
+    <button class="logout-btn" onclick="adminLogout()">Çıkış Yap</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="val" id="stat-total">-</div><div class="lbl">Toplam Randevu</div></div>
+    <div class="stat-card"><div class="val" id="stat-today">-</div><div class="lbl">Bugünkü</div></div>
+    <div class="stat-card"><div class="val" id="stat-free">-</div><div class="lbl">Boş Saat</div></div>
+  </div>
+
+  <h3 class="section-title">🕐 Bugünkü Saatler</h3>
+  <div id="admin-slots-container" style="margin-bottom:36px">
+    <div class="slots-loading">Yükleniyor...</div>
+  </div>
+  <p style="font-size:0.78rem;color:var(--muted);margin-bottom:32px;margin-top:-28px">💡 Boş saate tıkla → Kapat. Kapalıya tıkla → Aç.</p>
+
+  <h3 class="section-title">📋 Tüm Randevular</h3>
+  <div id="admin-appts-container">
+    <div class="slots-loading">Yükleniyor...</div>
+  </div>
+</div>
+
+<script>
+  // ─── SUPABASE ───────────────────────────────────────────────
+  const SUPABASE_URL = 'https://bziwflusgdgsxopsylwn.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6aXdmbHVzZ2Rnc3hvcHN5bHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NTM1MTcsImV4cCI6MjA1OTUyOTUxN30.LTrx_ZAm5mFr4AFveFNprlFIkc4x_Ga5yHD3cTD4VQQ';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ─── CONFIG ─────────────────────────────────────────────────
+  const SLOT_INTERVAL = 15; // minutes
+  const WORK_START = '09:00';
+  const WORK_END   = '19:00';
+  const SERVICES = {
+    sac:      { label: 'Saç',        duration: 45 },
+    sakal:    { label: 'Sakal',      duration: 15 },
+    sac_sakal:{ label: 'Saç + Sakal',duration: 60 },
+  };
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'berber123';
+
+  // ─── STATE ──────────────────────────────────────────────────
+  let selectedService = null;
+  let selectedDuration = 0;
+  let selectedSlot = null;
+  let adminLoggedIn = false;
+
+  // ─── HELPERS ────────────────────────────────────────────────
+  function todayStr() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  function generateSlots() {
+    const slots = [];
+    let [h, m] = WORK_START.split(':').map(Number);
+    const [eh, em] = WORK_END.split(':').map(Number);
+    while (h * 60 + m < eh * 60 + em) {
+      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      m += SLOT_INTERVAL;
+      if (m >= 60) { m -= 60; h++; }
+    }
+    return slots;
+  }
+
+  function slotToMinutes(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  // slots occupied by a booking starting at `startSlot` with `duration` minutes
+  function occupiedSlots(startSlot, duration) {
+    const allSlots = generateSlots();
+    const startMin = slotToMinutes(startSlot);
+    const endMin = startMin + duration;
+    return allSlots.filter(s => {
+      const sm = slotToMinutes(s);
+      return sm >= startMin && sm < endMin;
+    });
+  }
+
+  // ─── SECTION SWITCHING ──────────────────────────────────────
+  function showBooking() {
+    document.getElementById('booking-section').classList.remove('hidden');
+    document.getElementById('admin-login-section').classList.add('hidden');
+    document.getElementById('admin-panel-section').classList.add('hidden');
+  }
+  function showAdminLogin() {
+    if (adminLoggedIn) { showAdminPanel(); return; }
+    document.getElementById('booking-section').classList.add('hidden');
+    document.getElementById('admin-login-section').classList.remove('hidden');
+    document.getElementById('admin-panel-section').classList.add('hidden');
+  }
+  function showAdminPanel() {
+    document.getElementById('booking-section').classList.add('hidden');
+    document.getElementById('admin-login-section').classList.add('hidden');
+    document.getElementById('admin-panel-section').classList.remove('hidden');
+    loadAdminData();
+  }
+
+  // ─── INIT ───────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const di = document.getElementById('date-input');
+    di.value = todayStr();
+    di.min = todayStr();
+  });
+
+  // ─── SERVICE SELECTION ──────────────────────────────────────
+  function selectService(key, dur, el) {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedService = key;
+    selectedDuration = dur;
+    selectedSlot = null;
+    loadSlots();
+  }
+
+  // ─── LOAD SLOTS ─────────────────────────────────────────────
+  async function loadSlots() {
+    const date = document.getElementById('date-input').value;
+    if (!date) return;
+    if (!selectedService) {
+      document.getElementById('slot-container').innerHTML = '<div class="slots-loading">Önce bir hizmet seçin</div>';
+      return;
+    }
+    document.getElementById('slot-container').innerHTML = '<div class="slots-loading">Saatler yükleniyor...</div>';
+    selectedSlot = null;
+
+    const allSlots = generateSlots();
+
+    // fetch bookings
+    const { data: bookings } = await sb.from('appointments').select('slot, duration').eq('date', date);
+    // fetch closed slots
+    const { data: closedData } = await sb.from('closed_slots').select('slot').eq('date', date);
+
+    const bookedSet = new Set();
+    (bookings || []).forEach(b => {
+      occupiedSlots(b.slot, b.duration).forEach(s => bookedSet.add(s));
+    });
+    const closedSet = new Set((closedData || []).map(c => c.slot));
+
+    // For each free slot, check if booking of selectedDuration fits
+    function canBook(startSlot) {
+      return occupiedSlots(startSlot, selectedDuration).every(s => !bookedSet.has(s) && !closedSet.has(s));
+    }
+
+    const html = allSlots.map(slot => {
+      if (closedSet.has(slot)) {
+        return `<div class="slot closed-admin">🔒 ${slot}</div>`;
+      } else if (bookedSet.has(slot)) {
+        return `<div class="slot busy">${slot}</div>`;
+      } else if (!canBook(slot)) {
+        return `<div class="slot blocked">${slot}</div>`;
+      } else {
+        return `<div class="slot free" onclick="selectSlot('${slot}', this)">${slot}</div>`;
+      }
+    }).join('');
+
+    document.getElementById('slot-container').innerHTML = `<div class="slot-grid">${html}</div>`;
+  }
+
+  function selectSlot(slot, el) {
+    document.querySelectorAll('#slot-container .slot').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedSlot = slot;
+  }
+
+  // ─── CONFIRM BOOKING ────────────────────────────────────────
+  async function confirmBooking() {
+    const name = document.getElementById('name-input').value.trim();
+    const phone = document.getElementById('phone-input').value.trim();
+    const date = document.getElementById('date-input').value;
+
+    if (!selectedService) return alert('Lütfen bir hizmet seçin.');
+    if (!date) return alert('Lütfen bir tarih seçin.');
+    if (!selectedSlot) return alert('Lütfen bir saat seçin.');
+    if (!name) return alert('Lütfen adınızı girin.');
+    if (!phone) return alert('Lütfen telefon numaranızı girin.');
+
+    const btn = document.querySelector('.confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Kaydediliyor...';
+
+    const { error } = await sb.from('appointments').insert({
+      date, slot: selectedSlot,
+      service: selectedService,
+      duration: selectedDuration,
+      name, phone
+    });
+
+    btn.disabled = false;
+    btn.textContent = '✓ Randevumu Onayla';
+
+    if (error) {
+      alert('Bir hata oluştu: ' + error.message);
+    } else {
+      document.getElementById('success-banner').classList.add('show');
+      selectedSlot = null;
+      document.getElementById('name-input').value = '';
+      document.getElementById('phone-input').value = '';
+      loadSlots();
+      setTimeout(() => document.getElementById('success-banner').classList.remove('show'), 5000);
+    }
+  }
+
+  // ─── ADMIN LOGIN ─────────────────────────────────────────────
+  function adminLogin() {
+    const u = document.getElementById('admin-user').value;
+    const p = document.getElementById('admin-pass').value;
+    const err = document.getElementById('admin-error');
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      err.classList.remove('show');
+      adminLoggedIn = true;
+      showAdminPanel();
+    } else {
+      err.classList.add('show');
+    }
+  }
+  function adminLogout() {
+    adminLoggedIn = false;
+    showBooking();
+  }
+
+  // ─── ADMIN DATA ──────────────────────────────────────────────
+  async function loadAdminData() {
+    const today = todayStr();
+    const allSlots = generateSlots();
+
+    const { data: allAppts } = await sb.from('appointments').select('*').order('date', { ascending: true }).order('slot', { ascending: true });
+    const { data: closedData } = await sb.from('closed_slots').select('slot').eq('date', today);
+    const { data: todayAppts } = await sb.from('appointments').select('slot, duration').eq('date', today);
+
+    // stats
+    const closedSet = new Set((closedData || []).map(c => c.slot));
+    const bookedSet = new Set();
+    (todayAppts || []).forEach(b => occupiedSlots(b.slot, b.duration).forEach(s => bookedSet.add(s)));
+    const freeCount = allSlots.filter(s => !bookedSet.has(s) && !closedSet.has(s)).length;
+    document.getElementById('stat-total').textContent = (allAppts || []).length;
+    document.getElementById('stat-today').textContent = (todayAppts || []).length;
+    document.getElementById('stat-free').textContent = freeCount;
+
+    // admin slot grid (today)
+    const bookedStartSlots = new Set((todayAppts || []).map(b => b.slot));
+    const adminHtml = allSlots.map(slot => {
+      if (bookedSet.has(slot)) {
+        const appt = (todayAppts || []).find(b => b.slot === slot);
+        return `<div class="admin-slot booked">${slot}<br>Dolu</div>`;
+      } else if (closedSet.has(slot)) {
+        return `<div class="admin-slot closed-slot" onclick="toggleSlot('${slot}', '${today}', true)">${slot}<br>🔒</div>`;
+      } else {
+        return `<div class="admin-slot free" onclick="toggleSlot('${slot}', '${today}', false)">${slot}</div>`;
+      }
+    }).join('');
+    document.getElementById('admin-slots-container').innerHTML = `<div class="admin-slot-grid">${adminHtml}</div>`;
+
+    // appointments table
+    if (!allAppts || allAppts.length === 0) {
+      document.getElementById('admin-appts-container').innerHTML = '<div class="slots-loading">Henüz randevu yok</div>';
+      return;
+    }
+    const serviceLabel = { sac: 'Saç', sakal: 'Sakal', sac_sakal: 'Saç + Sakal' };
+    const rows = allAppts.map(a => `
+      <tr>
+        <td>${a.date}</td>
+        <td>${a.slot}</td>
+        <td>${serviceLabel[a.service] || a.service}</td>
+        <td>${a.name}</td>
+        <td>${a.phone}</td>
+        <td><button class="delete-btn" onclick="deleteAppt(${a.id})">Sil</button></td>
+      </tr>
+    `).join('');
+    document.getElementById('admin-appts-container').innerHTML = `
+      <div style="overflow-x:auto">
+        <table class="appts-table">
+          <thead><tr><th>Tarih</th><th>Saat</th><th>Hizmet</th><th>Ad</th><th>Telefon</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  async function toggleSlot(slot, date, isClosed) {
+    if (isClosed) {
+      await sb.from('closed_slots').delete().eq('date', date).eq('slot', slot);
+    } else {
+      await sb.from('closed_slots').insert({ date, slot });
+    }
+    loadAdminData();
+  }
+
+  async function deleteAppt(id) {
+    if (!confirm('Bu randevuyu silmek istediğinize emin misiniz?')) return;
+    await sb.from('appointments').delete().eq('id', id);
+    loadAdminData();
+  }
+</script>
+</body>
+</html>
