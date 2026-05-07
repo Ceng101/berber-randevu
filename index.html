@@ -278,7 +278,13 @@ const SERVICES = {
   sakal:    { label: 'Sakal',      duration: 15 },
   sac_sakal:{ label: 'Saç + Sakal',duration: 60 },
 };
+function isTimeInRange(time, startTime, duration){
+  const startIdx = HOURS.indexOf(startTime);
+  const timeIdx = HOURS.indexOf(time);
+  const slotsNeeded = Math.ceil(duration / 15);
 
+  return timeIdx >= startIdx && timeIdx < startIdx + slotsNeeded;
+}
 // ── STATE ─────────────────────────────────────────────────────
 let selectedDate = todayStr(0);
 let selectedTime = null;
@@ -352,26 +358,34 @@ function canFitAppointment(startIdx, slotsNeeded){
 
 function getSlotState(time){
 
-  // manuel kapalı
   if(blockedSlots.some(b => b.blocked_time.slice(0,5) === time)){
     return 'closed';
-  }
-
-  // zaten randevu başlangıcı mı?
-  if(appointments.some(a => a.appointment_time.slice(0,5) === time)){
-    return 'full';
   }
 
   const startIdx = HOURS.indexOf(time);
   if(startIdx === -1) return 'closed';
 
   const duration = SERVICES[selectedService].duration;
+
+  // bu slot başka bir randevunun içinde mi?
+  const conflict = appointments.some(a =>
+    isTimeInRange(time, a.appointment_time.slice(0,5), a.duration_minutes)
+  );
+
+  if(conflict) return 'full';
+
   const slotsNeeded = Math.ceil(duration / 15);
 
-  // SADECE “başlangıç olabilir mi?” kontrolü
-  const ok = canFitAppointment(startIdx, slotsNeeded);
+  // burada kontrol: bu slot başlangıç olabilir mi?
+  for(let i = 0; i < slotsNeeded; i++){
+    const t = HOURS[startIdx + i];
+    if(!t) return 'closed';
 
-  return ok ? 'empty' : 'closed';
+    if(blockedSlots.some(b => b.blocked_time.slice(0,5) === t)) return 'closed';
+    if(appointments.some(a => a.appointment_time.slice(0,5) === t)) return 'closed';
+  }
+
+  return 'empty';
 }
 
 // ── CUSTOMER ──────────────────────────────────────────────────
@@ -431,16 +445,14 @@ async function bookAppointment(){
   const slotsNeeded=Math.ceil(svc.duration/30);
   const startIdx=HOURS.indexOf(selectedTime);
   const inserts=[];
-  for(let i=0;i<slotsNeeded;i++){
-    inserts.push({
-      customer_name: name,
-      customer_phone: phone,
-      appointment_date: selectedDate,
-      appointment_time: HOURS[startIdx+i],
-      service: selectedService,
-      duration_minutes: svc.duration,
-    });
-  }
+  const {error}=await db.from('appointments').insert([{
+  customer_name: name,
+  customer_phone: phone,
+  appointment_date: selectedDate,
+  appointment_time: selectedTime,
+  service: selectedService,
+  duration_minutes: svc.duration,
+}]);
 
   const {error}=await db.from('appointments').insert(inserts);
   btn.disabled=false; btn.textContent='✓ Randevumu Onayla';
