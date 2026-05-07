@@ -288,7 +288,7 @@ async function init() {
   const { data } = await db.from('settings').select('*');
   if (data) {
     const shopName = data.find(s=>s.key==='shop_name')?.value || 'Berber';
-    document.getElementById('navBrand').innerHTML = `✂ ${shopName} <span>RANDEVU SİSTEMİ</span>`;
+    document.getElementById('navBrand').innerHTML = `✂ Berber Aygün Koç <span>RANDEVU SİSTEMİ</span>`;
     document.getElementById('shopTitle').textContent = `${shopName} — Randevu Oluştur`;
     document.title = `${shopName} Randevu`;
   }
