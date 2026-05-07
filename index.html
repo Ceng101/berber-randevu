@@ -161,17 +161,17 @@
         <div class="service-card selected" id="svc-sac" onclick="selectService('sac')">
           <div class="s-icon">💈</div>
           <div class="s-name">Saç</div>
-          <div class="s-duration">30 dakika</div>
+          <div class="s-duration">45 dakika</div>
         </div>
         <div class="service-card" id="svc-sakal" onclick="selectService('sakal')">
           <div class="s-icon">🪒</div>
           <div class="s-name">Sakal</div>
-          <div class="s-duration">20 dakika</div>
+          <div class="s-duration">15 dakika</div>
         </div>
         <div class="service-card" id="svc-sac_sakal" onclick="selectService('sac_sakal')">
           <div class="s-icon">✂️</div>
           <div class="s-name">Saç + Sakal</div>
-          <div class="s-duration">50 dakika</div>
+          <div class="s-duration">60 dakika</div>
         </div>
       </div>
     </div>
@@ -256,18 +256,27 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── CONFIG ────────────────────────────────────────────────────
 const ADMIN_USER = 'berber';
 const ADMIN_PASS = '1234';
-const HOURS = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30',
-               '13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30',
-               '17:00','17:30','18:00'];
+const HOURS = [
+  '09:00','09:15','09:30','09:45',
+  '10:00','10:15','10:30','10:45',
+  '11:00','11:15','11:30','11:45',
+  '12:00','12:15','12:30','12:45',
+  '13:00','13:15','13:30','13:45',
+  '14:00','14:15','14:30','14:45',
+  '15:00','15:15','15:30','15:45',
+  '16:00','16:15','16:30','16:45',
+  '17:00','17:15','17:30','17:45',
+  '18:00'
+];
 const MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const MONTHS_S = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 const DAYS = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 const DAYS_S = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 
 const SERVICES = {
-  sac:      { label: 'Saç',        duration: 30 },
-  sakal:    { label: 'Sakal',      duration: 20 },
-  sac_sakal:{ label: 'Saç + Sakal',duration: 50 },
+  sac:      { label: 'Saç',        duration: 45 },
+  sakal:    { label: 'Sakal',      duration: 15 },
+  sac_sakal:{ label: 'Saç + Sakal',duration: 60 },
 };
 
 // ── STATE ─────────────────────────────────────────────────────
@@ -288,7 +297,7 @@ async function init() {
   const { data } = await db.from('settings').select('*');
   if (data) {
     const shopName = data.find(s=>s.key==='shop_name')?.value || 'Berber';
-    document.getElementById('navBrand').innerHTML = `✂ ${shopName} <span>RANDEVU SİSTEMİ</span>`;
+    document.getElementById('navBrand').innerHTML = `✂ Berber Aygün Koç <span>RANDEVU SİSTEMİ</span>`;
     document.getElementById('shopTitle').textContent = `${shopName} — Randevu Oluştur`;
     document.title = `${shopName} Randevu`;
   }
@@ -331,7 +340,7 @@ function getSlotState(time){
   if(appointments.find(a=>a.appointment_time.slice(0,5)===time)) return 'full';
   // Hizmet süresine göre yeterli boş slot var mı kontrol et
   const duration = SERVICES[selectedService].duration;
-  const slotsNeeded = Math.ceil(duration / 30);
+  const slotsNeeded = Math.ceil(duration / 15);
   const startIdx = HOURS.indexOf(time);
   if(startIdx === -1) return 'closed';
   for(let i=0; i<slotsNeeded; i++){
